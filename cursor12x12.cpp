@@ -73,9 +73,6 @@ void Cursor12x12::setCursorPos(int16_t x, int16_t y)
                 }
                 int16_t nbuffer = j + (WIDTH * i);
                 int16_t n12x12 = jc + 12 * (i - y);
-                if (x == 1){
-                    Serial.printf("%d %d %d %d\n", i, j, nbuffer, n12x12);
-                }
                 this->table->setPixelColor(n12x12, buffer[nbuffer]);
             }
         }
