@@ -8,8 +8,5 @@ class Cursor12x12 : public LedTableNxN{
         void drawPixel(int16_t x, int16_t y, uint16_t color);
         void setCursorPos(int16_t x, int16_t y);
         uint32_t getPixel(int n);
-
-    private:
-        Adafruit_NeoPixel *table;
-        uint32_t *buffer;
+        uint32_t getPixel(int16_t x, int16_t y);
 };

@@ -1,4 +1,5 @@
 #include <LedTableNxN.h>
+#include <Adafruit_GFX.h>
 #include <Adafruit_NeoPixel.h>
 #include <Cursor12x12.h>
 
@@ -9,7 +10,6 @@ Cursor12x12::Cursor12x12(int n, int dataPin, neoPixelType flags) : LedTableNxN(n
 #if MESA == 1
     this->table->show();
 #endif
-    this->buffer = (uint32_t *)malloc(n * n * sizeof(uint32_t));
 }
 
 Cursor12x12::~Cursor12x12()
@@ -43,15 +43,12 @@ void Cursor12x12::drawPixel(int16_t x, int16_t y, uint16_t color)
             y = HEIGHT - 1 - t;
             break;
         }
-        if (y % 2 == 1)
-        {
-            x = WIDTH - x - 1;
-        }
         uint8_t red = (color >> 11) << 3;
         uint8_t green = ((color << 5) >> 10) << 2;
         uint8_t blue = ((color << 11) >> 11) << 3;
         uint16_t n = x + (WIDTH * y);
-        this->buffer[n] = (uint32_t)(red << 16) + (uint32_t)(green << 8) + (uint32_t)blue;
+        uint32_t RGBW888 = ((uint32_t)red << 16) | ((uint32_t)green << 8) | (uint32_t)blue;
+        this->buffer[n] = RGBW888;
     }
 }
 
@@ -61,23 +58,37 @@ void Cursor12x12::setCursorPos(int16_t x, int16_t y)
     {
         x = x < 0 ? 0 : (x > WIDTH - 12 ? WIDTH - 12 : x);
         y = y < 0 ? 0 : (y > HEIGHT - 12 ? HEIGHT - 12 : y);
-        for (int i = y; y < y + 12; y++)
+        for (int i = y; i < y + 12; i++)
         {
-            for (int j = x; x < x + 12; x++)
+            for (int j = x; j < x + 12; j++)
             {
-                if (i % 2 == 1)
+                int jc = j;
+                if ((i % 2) == ((y + 1) % 2))
                 {
-                    j = WIDTH - j - 1;
+                    jc = (12 - (j - x) - 1) ;
                 }
-                uint16_t nbuffer = i + (WIDTH * j);
-                uint16_t n12x12 = (j - x) + 12 * (i - y);
+                else
+                {
+                    jc = (j - x);
+                }
+                int16_t nbuffer = j + (WIDTH * i);
+                int16_t n12x12 = jc + 12 * (i - y);
+                if (x == 1){
+                    Serial.printf("%d %d %d %d\n", i, j, nbuffer, n12x12);
+                }
                 this->table->setPixelColor(n12x12, buffer[nbuffer]);
             }
         }
     }
 }
 
-uint32_t LedTableNxN::getPixel(int n)
+uint32_t Cursor12x12::getPixel(int n)
 {
     return this->table->getPixelColor(n);
+}
+
+uint32_t Cursor12x12::getPixel(int16_t x, int16_t y)
+{
+    uint16_t n = x + (WIDTH * y);
+    return this->buffer[n];
 }
